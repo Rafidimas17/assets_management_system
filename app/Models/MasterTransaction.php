@@ -25,4 +25,10 @@ class MasterTransaction extends Model
     {
         return $this->belongsTo(MasterCabang::class);
     }
+    
+    public function user()
+    {
+        return $this->hasMany(MasterUser::class);
+    }
+    
 }

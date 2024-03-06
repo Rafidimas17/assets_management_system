@@ -6,6 +6,8 @@ use Illuminate\Http\Request;
 use App\Models\MasterTransaction;
 use App\Models\MasterCenterStorage;
 use App\Models\MasterOfficeStorage;
+use App\Models\MasterCabang;
+use App\Models\MasterUser;
 use Illuminate\Support\Facades\Validator;
 use Carbon\Carbon;
 
@@ -15,6 +17,25 @@ class TransactionController extends Controller
         $user=$request->user();
 
         $transactions = MasterTransaction::where('cabang_id', $user->cabang->id)->get();
+        $data = [];
+
+        foreach ($transactions as $transaction) {
+            $data[] = [
+                'id'=>$transaction->id,
+                'nama' => $transaction->barang->nama,
+                'cabang'=>$transaction->cabang->nama_cabang,
+                'tanggal_transaksi'=>$transaction->tanggal_transaksi,
+                'jumlah'=>$transaction->jumlah_pengajuan,
+                'status'=>$transaction->status_transaksi,               
+            ];
+        }
+        return response()->json([$data],200);
+    }
+
+    public function show(Request $request){
+        $user=$request->user();
+
+        $transactions = MasterTransaction::all();
         $data = [];
 
         foreach ($transactions as $transaction) {
@@ -65,55 +86,63 @@ class TransactionController extends Controller
            
             switch ($user->role->nama_role) {
                 case 'HQ':
-                    if ($transaction->status_transaksi === "drafted" && $request->status_transaksi == 'approved') {                      
-                       
-                            $transaction->status_transaksi = 'approved';
-                            $transaction->user_id = $user->id;
-                            $officeStock = MasterOfficeStorage::where([
-                                ['cabang_id', $transaction->cabang_id],
-                                ['barang_id', $transaction->barang_id]
-                            ])->first();                    
-                            if($officeStock === null) {                       
-                                MasterOfficeStorage::create([
-                                    'cabang_id' => $transaction->cabang_id,
-                                    'barang_id' => $transaction->barang_id,
-                                    'jumlah_stock' => $transaction->jumlah_pengajuan
-                                ]);
-                            } else {                      
-                                $officeStock->jumlah_stock += $transaction->jumlah_pengajuan;
-                                $officeStock->save();
-                                
-                                $centerStock = MasterCenterStorage::where('barang_id', $transaction->barang_id)->first();
-                                $centerStock->jumlah_stock -= $transaction->jumlah_pengajuan;
-                                $centerStock->save();
-                            } 
-                       
-                    } elseif ($request->status_transaksi === 'rejected'  && $transaction->status_transaksi === "drafted" ) {
-                        $transaction->user_id = $user->id;
+                    if ($transaction->status_transaksi === 'drafted' && $request->status_transaksi === 'approved') {
+                        // Periksa apakah entri sudah ada di MasterCenterStorage
+                        $centerStock = MasterCenterStorage::where('barang_id', $transaction->barang_id)->first();
+                        if ($centerStock) {
+                            // Jika entri sudah ada, tambahkan jumlah_pengajuan ke jumlah_stock yang sudah ada
+                            $centerStock->jumlah_stock -= $transaction->jumlah_pengajuan;
+                        } else {
+                            // Jika entri belum ada, buat entri baru di MasterCenterStorage
+                            $centerStock = new MasterCenterStorage();
+                            $centerStock->barang_id = $transaction->barang_id;
+                            $centerStock->cabang_id = $transaction->cabang_id;
+                            $centerStock->jumlah_stock = $transaction->jumlah_pengajuan;
+                        }
+                        $transaction->status_transaksi = "approved";
+                        // Simpan perubahan pada stok barang di MasterCenterStorage
+                        $centerStock->save();
+                
+                        // Periksa apakah entri sudah ada di MasterOfficeStorage
+                        $officeStock = MasterOfficeStorage::where('barang_id', $transaction->barang_id)
+                                                            ->where('cabang_id', $transaction->cabang_id)
+                                                            ->first();
+                        if ($officeStock) {
+                            // Jika entri sudah ada, tambahkan jumlah_pengajuan ke jumlah_stock yang sudah ada
+                            $officeStock->jumlah_stock += $transaction->jumlah_pengajuan;
+                        } else {
+                            // Jika entri belum ada, buat entri baru di MasterOfficeStorage
+                            $officeStock = new MasterOfficeStorage();
+                            $officeStock->barang_id = $transaction->barang_id;
+                            $officeStock->cabang_id = $transaction->cabang_id;
+                            $officeStock->jumlah_stock = $transaction->jumlah_pengajuan;
+                        }
+                        // Simpan perubahan pada stok barang di MasterOfficeStorage
+                        $officeStock->save();
+                    } elseif ($request->status_transaksi === 'rejected' && $transaction->status_transaksi === 'drafted') {
+                        // Atur status transaksi menjadi ditolak
                         $transaction->status_transaksi = 'rejected';
                     } else {
                         return response()->json(['message' => 'Invalid transaction status'], 400);
                     }
-                    break;
-                
+                    break;                                
           
-                case 'Manager':
-                   
-
-                     if ($transaction->status_transaksi === 'pending' && $request->status_transaksi === 'drafted') {
-                        if ($request->status_transaksi === 'drafted') {
+                    case 'Manager':
+                        // Pastikan status transaksi adalah 'pending' dan request status adalah 'drafted'
+                        if ($transaction->status_transaksi === 'pending' && $request->status_transaksi === 'drafted') {
+                            // Jika request status adalah 'drafted', atur status transaksi menjadi 'drafted'
                             $transaction->user_id = $user->id;
                             $transaction->status_transaksi = 'drafted';
                         } elseif ($request->status_transaksi === 'rejected') {
+                            // Jika request status adalah 'rejected', atur status transaksi menjadi 'rejected'
                             $transaction->user_id = $user->id;
                             $transaction->status_transaksi = 'rejected';
                         } else {
+                            // Jika status transaksi tidak sesuai dengan kondisi yang diharapkan, kembalikan pesan kesalahan
                             return response()->json(['message' => 'Invalid transaction status'], 400);
                         }
-                    } else {
-                        return response()->json(['message' => 'Transaction cannot be updated'], 400);
-                    }
-                break;
+                        break;
+                    
                 
                 case 'Office':
                 
@@ -140,12 +169,65 @@ class TransactionController extends Controller
             // return response()->json(['message' => 'Transaction update failed','error'=>$e->getMessage()], 400);
         }
     }
-
     public function showById(Request $request){
-        $user=$request->user();
-        $data_transaction=MasterTransaction::where('cabang_id',$user->cabang->id)->get();
-
-        return response()->json($data_transaction);
+        $data_transaction = MasterTransaction::where('cabang_id', $request->user()->cabang->id)->get();
+        $data = [];
+    
+        foreach ($data_transaction as $data_trans) {
+            // Cari peran dari tabel MasterUser berdasarkan user_id dalam transaksi
+            $user = MasterUser::find($data_trans->user_id);
+            $role = $user ? $user->role->nama_role : null; // Pastikan user ditemukan sebelum mengambil peran
+    
+            $data[] = [
+                'id' => $data_trans->id,
+                'nama_pemohon' => $data_trans->nama_pemohon,
+                'role' => $role,
+                "tanggal_transaksi" => $data_trans->tanggal_transaksi,
+                "status_transaksi" => $data_trans->status_transaksi,
+                "jumlah_pengajuan" => $data_trans->jumlah_pengajuan,
+                "created_at" => $data_trans->created_at,
+            ];
+        }
+    
+        return response()->json($data);
     }
+
+    public function history($id)
+    {
+        try {
+            // Cari transaksi berdasarkan id yang diberikan
+            $transaction = MasterTransaction::findOrFail($id);
+    
+            // Cari data cabang berdasarkan cabang_id yang ada pada transaksi
+            $cabang = MasterCabang::find($transaction->cabang_id);
+    
+            // Cek apakah status transaksi adalah "approved" atau "rejected"
+            if ($transaction->status_transaksi === 'approved' || $transaction->status_transaksi === 'rejected') {
+                // Buat respons dengan data yang diinginkan
+                $data = [
+                    'nama_barang' => $transaction->barang->nama,
+                    'tanggal_transaksi' => $transaction->tanggal_transaksi,
+                    'nama_category' => $transaction->barang->category->nama,
+                    'status' => $transaction->status_transaksi,
+                    'nama_cabang' => $cabang ? $cabang->nama_cabang : null, // Jika cabang ditemukan, ambil nama cabang. Jika tidak, set null.
+                    'catatan' => $transaction->catatan,
+                    'nama_pemohon' => $transaction->nama_pemohon
+                ];
+    
+                // Kembalikan respons dalam format JSON
+                return response()->json($data, 200);
+            } else {
+                // Jika status transaksi tidak valid, kembalikan pesan kesalahan
+                return response()->json(['message' => 'Transaction status is not approved or rejected'], 400);
+            }
+        } catch (\Exception $e) {
+            // Jika terjadi kesalahan, kembalikan pesan kesalahan
+            return response()->json(['message' => 'Transaction not found'], 404);
+        }
+    }
+    
+    
+    
+    
 
 }

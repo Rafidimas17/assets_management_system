@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\MasterBarang;
+use App\Models\MasterCenterStorage;
 
 class BarangController extends Controller
 {
@@ -28,12 +29,26 @@ class BarangController extends Controller
             'category_id' => 'required|exists:master_category,id',
             'nama' => 'required',
             'deskripsi' => 'required',
-            'kode_barang' => 'required'
+            'kode_barang' => 'required',
+            'jumlah_stock' => 'required', // Pastikan jumlah_stock ada dalam validasi
         ]);
-
-        $barang = MasterBarang::create($request->all());
+    
+        // Ambil nilai jumlah_stock dari request
+        $jumlah_stock = $request->jumlah_stock;
+    
+        // Buat instance MasterBarang tanpa jumlah_stock
+        $barang = MasterBarang::create($request->except('jumlah_stock'));
+    
+        // Buat instance MasterCenterStorage dan masukkan data
+        $centerStore = MasterCenterStorage::create([
+            'barang_id' => $barang->id,
+            'jumlah_stock' => $jumlah_stock,
+        ]);
+    
+        // Beri respons dengan data barang yang dibuat
         return response()->json($barang, 201);
     }
+    
 
     // Memperbarui barang berdasarkan ID
     public function update(Request $request, $id)

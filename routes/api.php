@@ -31,7 +31,8 @@ Route::prefix('auth')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout'])->middleware('jwt.verify');
 });    
 
-Route::prefix('user')->middleware('jwt.verify')->group(function(){
+Route::prefix('user')->middleware('jwt.verify')->group(function(){    
+    Route::get('/all', [UserController::class, 'index']);
     Route::get('/', [UserController::class, 'show']);
 });
 
@@ -39,8 +40,10 @@ Route::prefix('office')->middleware('jwt.verify')->group(function(){
     Route::get('/', [BarangOfficeController::class, 'show']);
     Route::get('/detail/{id}', [BarangOfficeController::class, 'detailBarang']);
     Route::delete('/{id}', [BarangOfficeController::class, 'delete']);
+    Route::put('/{id}/update', [TransactionController::class, 'update']);
     Route::post('/transaction/create',[TransactionController::class, 'submit']);
     Route::get('/transaction/all',[TransactionController::class, 'showById']);
+    Route::get('/transaction/{id}', [TransactionController::class, 'history']);
 });
 
 Route::prefix('center')->middleware('jwt.verify')->group(function(){
@@ -59,7 +62,8 @@ Route::prefix('center')->middleware('jwt.verify')->group(function(){
     Route::put('/cabang/{id}', [BarangCenterController::class, 'updateCabang']);
     Route::delete('/cabang/{id}', [BarangCenterController::class, 'destroyCabang']);
 
-    Route::get('/transaction/all', [TransactionController::class, 'index']);
+    Route::get('/transaction/all', [TransactionController::class, 'show']);
+    Route::get('/transaction/{id}', [TransactionController::class, 'history']);
     Route::put('/{id}/update', [TransactionController::class, 'update']);
 });
 
@@ -71,4 +75,7 @@ Route::prefix('barang')->group(function () {
     Route::delete('/{id}', [BarangController::class, 'destroy']); // Menghapus barang berdasarkan ID
 });
 
-
+Route::get('/category',[UserController::class, 'category']);
+Route::get('/cabang',[UserController::class, 'cabang']);
+Route::get('/role',[UserController::class, 'role']);
+Route::get('/barang',[UserController::class, 'barang']);

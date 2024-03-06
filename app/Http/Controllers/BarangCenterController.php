@@ -17,25 +17,20 @@ class BarangCenterController extends Controller
         $data = [];
     
         foreach ($barangs as $barang) {
-            // Mengambil MasterBarang berdasarkan id
-            $masterBarang = MasterBarang::find($barang->id);
-    
-            // Memeriksa jika MasterBarang ditemukan
-            if ($masterBarang) {
-                $data[] = [
-                    'id' => $barang->id,
-                    'nama' => $masterBarang->nama,
-                    'category' => $masterBarang->category->nama,
-                    'tanggal_penambahan' => $barang->created_at,
-                    'kode_barang' => $masterBarang->kode_barang,
-                    'stock' => $barang->jumlah_stock,
-                ];
-            }
+            $data[] = [
+                'id' => $barang->id,
+                'nama' => $barang->barang->nama,
+                'category' => $barang->category->nama ?? null,
+                'tanggal_penambahan' => null, // Atur nilainya sesuai kebutuhan Anda
+                'kode_barang' => $barang->barang->kode_barang,
+                'stock' => $barang->jumlah_stock,
+            ];
         }
         
         // Response dengan data barang beserta kategori
         return response()->json($data, 200);
     }
+    
     
     public function show($id)
     {
