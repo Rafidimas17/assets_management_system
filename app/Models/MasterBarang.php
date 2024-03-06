@@ -14,9 +14,9 @@ class MasterBarang extends Model
 
     protected $fillable = [
         'category_id',
-        'nama_barang',
-        'harga',
-        'stok',
+        'nama',
+        'deskripsi',
+        'kode_barang',
     ];
 
     protected $dates = ['deleted_at'];

@@ -14,7 +14,8 @@ class UserController extends Controller
             'nama' => $user->nama,
             'email' => $user->email,
             'username' => $user->username,
-            'role' => $user->role->nama_role 
+            'role' => $user->role->nama_role,
+            'cabang'=>$user->cabang->nama_cabang, 
         ];
         // Response dengan data pengguna, termasuk nama peran
         return response()->json([$data],200);

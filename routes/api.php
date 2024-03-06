@@ -32,7 +32,7 @@ Route::prefix('auth')->group(function () {
 });    
 
 Route::prefix('user')->middleware('jwt.verify')->group(function(){
-    Route::get('/all', [UserController::class, 'show']);
+    Route::get('/', [UserController::class, 'show']);
 });
 
 Route::prefix('office')->middleware('jwt.verify')->group(function(){

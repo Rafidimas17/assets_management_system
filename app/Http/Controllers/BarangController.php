@@ -25,10 +25,10 @@ class BarangController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'category_id' => 'required',
-            'nama_barang' => 'required',
-            'harga' => 'required',
-            'stok' => 'required'
+            'category_id' => 'required|exists:master_category,id',
+            'nama' => 'required',
+            'deskripsi' => 'required',
+            'kode_barang' => 'required'
         ]);
 
         $barang = MasterBarang::create($request->all());
@@ -44,10 +44,20 @@ class BarangController extends Controller
     }
 
     // Menghapus barang berdasarkan ID
-    public function destroy($id)
-    {
-        $barang = MasterBarang::findOrFail($id);
-        $barang->delete();
-        return response()->json(['message' => 'Barang deleted successfully'], 204);
+    public function destroy(Request $request,$id)
+    {   
+        $user = $request->user();        
+        $barang = MasterBarang::find($id);
+      
+
+            
+            if (! $barang) {
+                return response()->json(['message' => 'id tidak ditemukan',$barang]);
+            }
+            
+            $barang->delete();
+            return response()->json(['message' => 'Berhasil menghapus data', 'id' => $id, 'error' => false]);
+       
+
     }
 }
