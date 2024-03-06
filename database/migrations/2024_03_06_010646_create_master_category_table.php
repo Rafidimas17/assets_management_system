@@ -1,4 +1,5 @@
 <?php
+
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -12,14 +13,10 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('master_barang', function (Blueprint $table) {
+        Schema::create('master_category', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->unsignedBigInteger('category_id')->index('category_id');
-            $table->string('nama');
-            $table->text('deskripsi')->nullable();
-            $table->string('kode_barang')->unique();                     
-            $table->timestamps(); 
-            $table->softDeletes();
+            $table->string('nama');            
+            $table->timestamps();
         });
     }
 
@@ -30,6 +27,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('master_barang');
+        Schema::dropIfExists('master_category');
     }
 };

@@ -9,7 +9,7 @@ class MasterTransaction extends Model
 {
     use HasFactory;
     protected $table = 'master_transaction';
-    protected $fillable = ['barang_id', 'cabang_id', 'user_id', 'tanggal_transaksi', 'status_transaksi', 'catatan','jumlah_pengajuan','komentar'];
+    protected $fillable = ['nama_pemohon','barang_id', 'cabang_id', 'user_id', 'tanggal_transaksi', 'status_transaksi', 'catatan','jumlah_pengajuan','komentar'];
 
     public function users()
     {

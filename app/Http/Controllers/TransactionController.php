@@ -38,6 +38,7 @@ class TransactionController extends Controller
             'catatan'=>'string',
         ]);
         $transaction=MasterTransaction::create([
+            'nama_pemohon'=>$user->nama,
             'barang_id'=>$request->barang_id,
             'cabang_id'=>$user->cabang->id,
             'user_id'=>$user->id,
@@ -57,74 +58,94 @@ class TransactionController extends Controller
 
         try {
             $transaction = MasterTransaction::findOrFail($id);
-
+            $officeStock = MasterOfficeStorage::where([
+                ['cabang_id', $transaction->cabang_id],
+                ['barang_id', $transaction->barang_id]
+            ])->first();
+           
             switch ($user->role->nama_role) {
                 case 'HQ':
-                    if ($request->status_transaksi === 'approved' && $transaction->status_transaksi === "drafted" ) {
-                        $transaction->status_transaksi === 'approved';
-                        $transaction->user_id = $user->id;                   
-                        $officeStock = MasterOfficeStorage::where([
-                            ['cabang_id', $transaction->cabang_id],
-                            ['barang_id', $transaction->barang_id]
-                        ])->first();
-
-                        $officeStock = MasterOfficeStorage::where([
-                            ['cabang_id', $transaction->cabang_id],
-                            ['barang_id', $transaction->barang_id]
-                        ])->first();                    
-                        if($officeStock === null) {                       
-                            MasterOfficeStorage::create([
-                                'cabang_id' => $transaction->cabang_id,
-                                'barang_id' => $transaction->barang_id,
-                                'jumlah_stock' => $transaction->jumlah_pengajuan
-                            ]);
-                        } else {                      
-                            $officeStock->jumlah_stock += $transaction->jumlah_pengajuan;
-                            $officeStock->save();
-                        
-                        
-                            $centerStock = MasterCenterStorage::where('barang_id', $transaction->barang_id)->first();
-                            $centerStock->jumlah_stock -= $transaction->jumlah_pengajuan;
-                            $centerStock->save();
-                        }                        
+                    if ($transaction->status_transaksi === "drafted" && $request->status_transaksi == 'approved') {                      
+                       
+                            $transaction->status_transaksi = 'approved';
+                            $transaction->user_id = $user->id;
+                            $officeStock = MasterOfficeStorage::where([
+                                ['cabang_id', $transaction->cabang_id],
+                                ['barang_id', $transaction->barang_id]
+                            ])->first();                    
+                            if($officeStock === null) {                       
+                                MasterOfficeStorage::create([
+                                    'cabang_id' => $transaction->cabang_id,
+                                    'barang_id' => $transaction->barang_id,
+                                    'jumlah_stock' => $transaction->jumlah_pengajuan
+                                ]);
+                            } else {                      
+                                $officeStock->jumlah_stock += $transaction->jumlah_pengajuan;
+                                $officeStock->save();
+                                
+                                $centerStock = MasterCenterStorage::where('barang_id', $transaction->barang_id)->first();
+                                $centerStock->jumlah_stock -= $transaction->jumlah_pengajuan;
+                                $centerStock->save();
+                            } 
+                       
                     } elseif ($request->status_transaksi === 'rejected'  && $transaction->status_transaksi === "drafted" ) {
+                        $transaction->user_id = $user->id;
                         $transaction->status_transaksi = 'rejected';
                     } else {
-                    
                         return response()->json(['message' => 'Invalid transaction status'], 400);
-                    }                
-                    break;
-                case 'Manager':
-                    if ($request->status_transaksi === 'drafted'  && $transaction->status_transaksi === "pending" ) {
-                    
-                    $transaction->status_transaksi = 'drafted';
-                    }else if($request->status_transaksi === 'rejected'  && $transaction->status_transaksi === "pending" ){
-                        $transaction->status_transaksi = 'rejected';
                     }
                     break;
+                
+          
+                case 'Manager':
+                   
+
+                     if ($transaction->status_transaksi === 'pending' && $request->status_transaksi === 'drafted') {
+                        if ($request->status_transaksi === 'drafted') {
+                            $transaction->user_id = $user->id;
+                            $transaction->status_transaksi = 'drafted';
+                        } elseif ($request->status_transaksi === 'rejected') {
+                            $transaction->user_id = $user->id;
+                            $transaction->status_transaksi = 'rejected';
+                        } else {
+                            return response()->json(['message' => 'Invalid transaction status'], 400);
+                        }
+                    } else {
+                        return response()->json(['message' => 'Transaction cannot be updated'], 400);
+                    }
+                break;
+                
                 case 'Office':
                 
-                    if ($request->status_transaksi === 'pending') {
-                    
+                    if ($request->status_transaksi === 'pending'  && $request->status_transaksi === 'pending') {
+                        $transaction->user_id = $user->id;
                         $transaction->status_transaksi = 'pending';
                         }else if($request->status_transaksi === 'rejected'){
+                            $transaction->user_id = $user->id;
                             $transaction->status_transaksi = 'rejected';
                         }
                         break;
                     break;
                 default:
-                    // Jika peran tidak sesuai, kembalikan respons dengan pesan kesalahan
                     return response()->json(['message' => 'User does not have permission to approve transactions'], 403);
             }
 
-            // Mengatur user_id dan menyimpan transaksi
+         
             $transaction->user_id = $user->id;
             $transaction->save();
 
-            return response()->json(['message' => 'Transaction updated successfully',$officeStock], 200);
+            return response()->json(['message' => 'Transaction updated successfully'], 200);
         } catch (\Exception $e) {
-            return response()->json(['message' => 'Transaction update failed'], 400);
+            return response()->json(['message' => 'Transaction update failed','error'], 400);
+            // return response()->json(['message' => 'Transaction update failed','error'=>$e->getMessage()], 400);
         }
+    }
+
+    public function showById(Request $request){
+        $user=$request->user();
+        $data_transaction=MasterTransaction::where('cabang_id',$user->cabang->id)->get();
+
+        return response()->json($data_transaction);
     }
 
 }

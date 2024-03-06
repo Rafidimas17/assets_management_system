@@ -13,6 +13,7 @@ class MasterBarang extends Model
     protected $table = 'master_barang';
 
     protected $fillable = [
+        'category_id',
         'nama_barang',
         'harga',
         'stok',
@@ -33,5 +34,10 @@ class MasterBarang extends Model
     public function office_storage()
     {
         return $this->hasMany(MasterOfficeStorage::class);
+    }
+
+    public function category()
+    {
+        return $this->belongsTo(MasterCategory::class,'category_id');
     }
 }

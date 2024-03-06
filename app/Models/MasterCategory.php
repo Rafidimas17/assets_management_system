@@ -6,18 +6,22 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class MasterRole extends Model
+class MasterCategory extends Model
 {
     use HasFactory, SoftDeletes;
 
-    protected $table = 'master_role';
+    protected $table = 'master_category';
 
     protected $fillable = [
-        'nama_role',
+        'nama',
     ];
 
     protected $dates = ['deleted_at'];
-    public function users(){
-        $this->hasMany(MasterUser::class);
+
+    public $timestamps = false; // Nonaktifkan penggunaan created_at dan updated_at
+
+    public function barang()
+    {
+        return $this->hasMany(MasterBarang::class);
     }
 }
