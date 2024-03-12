@@ -51,6 +51,7 @@ class TransactionController extends Controller
             $data[] = [
                 'id' => $transaction->id,
                 'nama' => $namaBarang,
+                'nama_barang'=>$namaBarang,
                 'cabang' => $namaCabang,
                 'tanggal_transaksi' => $transaction->tanggal_transaksi,
                 'jumlah' => $transaction->jumlah_pengajuan,
@@ -189,8 +190,10 @@ class TransactionController extends Controller
     public function showById(Request $request){
         $data_transaction = MasterTransaction::where('cabang_id', $request->user()->cabang->id)->get();
         $data = [];
-    
+        
         foreach ($data_transaction as $data_trans) {
+            $barang = MasterBarang::find($data_trans->barang_id);
+            $nama_barang = $barang ? $barang->nama : null; // Pastikan barang ditemukan sebelum mengambil namanya
             // Cari peran dari tabel MasterUser berdasarkan user_id dalam transaksi
             $user = MasterUser::find($data_trans->user_id);
             $role = $user ? $user->role->nama_role : null; // Pastikan user ditemukan sebelum mengambil peran
@@ -199,6 +202,7 @@ class TransactionController extends Controller
                 'id' => $data_trans->id,
                 'nama_pemohon' => $data_trans->nama_pemohon,
                 'role' => $role,
+                'nama_barang' => $nama_barang,
                 "tanggal_transaksi" => $data_trans->tanggal_transaksi,
                 "status_transaksi" => $data_trans->status_transaksi,
                 "jumlah_pengajuan" => $data_trans->jumlah_pengajuan,

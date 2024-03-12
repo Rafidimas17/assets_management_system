@@ -46,7 +46,7 @@
                                                                             </p>
                                                                             <br>
                                                                             <p style="margin: 0;">Pengajuan barang<strong
-                                                                                    style="color:rgb(9, 9, 9);"> {{ $barang }}</strong>
+                                                                                    style="color:rgb(9, 9, 9);"> dari</strong>
                                                                                 cabang
                                                                                 <strong>{{ $cabang }} </strong>
                                                                             </p>
@@ -60,9 +60,9 @@
                                                                                 style="margin: 0; mso-line-height-alt: 16.8px;">
                                                                                 <br />
                                                                             </p>
-                                                                            <p style="margin: 0;">Nama barang<strong>
+                                                                            <p style="margin: 0;">Nama barang :<strong>
                                                                                 <strong>{{ $barang }}</strong><br />
-                                                                            <p style="margin: 0;">Jumlah Barang <strong>
+                                                                            <p style="margin: 0;">Jumlah Barang :
                                                                                 <strong>{{ $jumlah }}</strong><br />Catatan :
                                                                                 <strong>{{ $catatan }}</strong>
                                                                             </p>
@@ -70,6 +70,7 @@
                                                                                 style="margin: 0; mso-line-height-alt: 16.8px;">
                                                                                 <br />
                                                                             </p>
+                                                                            <a href="http://localhost:3000/admin/permintaan-barang" style="text-decoration: none; color: #000000; display: inline-block; padding: 10px; background-color: #FFFFFF; border: 1px solid #CCCCCC; border-radius: 5px;">Lihat detail</a>
                                                                         </div>
                                                                 </td>
                                                             </tr>
@@ -81,7 +82,7 @@
                                                                         <table border="0" cellpadding="0" cellspacing="0" role="presentation" style="mso-table-lspace: 0; mso-table-rspace: 0;" width="100%">
                                                                             <tr>
                                                                                 <td class="divider_inner" style="font-size: 1px; line-height: 1px; border-top: 1px solid #C4C4C4;">
-                                                                                    <a href="http://localhost:3000/admin/permintaan-barang" style="text-decoration: none; color: #000000; display: inline-block; padding: 10px; background-color: #FFFFFF; border: 1px solid #CCCCCC; border-radius: 5px;">Lihat detail</a>
+                                                                                    {{-- <a href="http://localhost:3000/admin/permintaan-barang" style="text-decoration: none; color: #000000; display: inline-block; padding: 10px; background-color: #FFFFFF; border: 1px solid #CCCCCC; border-radius: 5px;">Lihat detail</a> --}}
                                                                                 </td>
                                                                             </tr>
                                                                         </table>

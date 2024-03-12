@@ -32,7 +32,7 @@ class Notification extends Mailable
         $this->jumlah = number_format(floatval($jumlah));
         $this->cabang = $cabang;
         $this->catatan = $catatan;
-        $this-> $nama_barang =  $nama_barang ;
+        $this-> nama_barang =  $nama_barang ;
         
     }
 
