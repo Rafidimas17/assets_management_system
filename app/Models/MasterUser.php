@@ -4,10 +4,11 @@ namespace App\Models;
 
 use Tymon\JWTAuth\Contracts\JWTSubject;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class MasterUser extends Authenticatable implements JWTSubject
 {
-    // Your model implementation
+    use HasFactory, SoftDeletes;
 
     /**
      * Get the identifier that will be stored in the subject claim of the JWT.

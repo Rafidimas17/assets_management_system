@@ -19,8 +19,16 @@ class BarangController extends Controller
     public function show($id)
     {
         $barang = MasterBarang::findOrFail($id);
-        return response()->json($barang, 200);
+        $barang_center = MasterCenterStorage::where('barang_id', $id)->first();
+    
+        $response = [
+            'barang' => $barang,
+            'jumlah_stock' => $barang_center ? $barang_center->jumlah_stock : null
+        ];
+    
+        return response()->json($response, 200);
     }
+    
 
     // Membuat barang baru
     public function store(Request $request)
@@ -55,24 +63,37 @@ class BarangController extends Controller
     {
         $barang = MasterBarang::findOrFail($id);
         $barang->update($request->all());
+    
+        // Mengambil data stok dari request
+        $stock = $request->jumlah_stock;
+    
+        // Memperbarui stok di MastercenterStorage
+        $storage = MasterCenterStorage::where('barang_id', $id)->first();
+     
+            $storage->jumlah_stock = $stock;
+            $storage->save();
+      
+    
         return response()->json($barang, 200);
     }
 
-    // Menghapus barang berdasarkan ID
-    public function destroy(Request $request,$id)
-    {   
-        $user = $request->user();        
+    public function destroy($id)
+    {
+        // Hapus entri dari MasterBarang
         $barang = MasterBarang::find($id);
-      
-
-            
-            if (! $barang) {
-                return response()->json(['message' => 'id tidak ditemukan',$barang]);
-            }
-            
+        if ($barang) {
             $barang->delete();
-            return response()->json(['message' => 'Berhasil menghapus data', 'id' => $id, 'error' => false]);
-       
-
+        }
+    
+        // Hapus entri dari MasterCenterStorage
+        $storage = MasterCenterStorage::where('barang_id', $id)->first();
+        if ($storage) {
+            $storage->delete();
+        }
+    
+        // Memberikan respons bahwa penghapusan berhasil dilakukan
+        return response()->json(['message' => 'Berhasil menghapus data', 'id' => $id], 200);
     }
+    
+    
 }

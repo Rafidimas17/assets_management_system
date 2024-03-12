@@ -34,6 +34,10 @@ Route::prefix('auth')->group(function () {
 Route::prefix('user')->middleware('jwt.verify')->group(function(){    
     Route::get('/all', [UserController::class, 'index']);
     Route::get('/', [UserController::class, 'show']);
+    Route::put('/{id}/update', [UserController::class, 'update']);
+    Route::get('/{id}', [UserController::class, 'showById']);
+    Route::delete('/{id}/delete', [UserController::class, 'destroy']);
+
 });
 
 Route::prefix('office')->middleware('jwt.verify')->group(function(){
@@ -58,6 +62,7 @@ Route::prefix('center')->middleware('jwt.verify')->group(function(){
     Route::get('/barang/cabang/{cabangId}', [BarangCenterController::class, 'showBarangByCabang']);
     
     Route::get('/cabang', [BarangCenterController::class, 'indexCabang']);
+    Route::get('/cabang-detail/{id}', [BarangCenterController::class, 'getCabangById']);
     Route::post('/cabang', [BarangCenterController::class, 'storeCabang']);
     Route::put('/cabang/{id}', [BarangCenterController::class, 'updateCabang']);
     Route::delete('/cabang/{id}', [BarangCenterController::class, 'destroyCabang']);

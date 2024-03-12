@@ -90,8 +90,7 @@ class BarangCenterController extends Controller
             }
             
             $barang->delete();
-            return response()->json(['message' => 'Berhasil menghapus data', 'id' => $id, 'error' => false]);
-       
+            return response()->json(['message' => 'Berhasil menghapus data', 'id' => $id, 'error' => false]);       
 
     }
     
@@ -130,6 +129,18 @@ class BarangCenterController extends Controller
     {
         $cabangs = MasterCabang::all();
         return response()->json($cabangs, 200);
+    }
+    public function getCabangById(Request $request,$id){
+        $user=$request->user();
+        try{
+
+            $data_cabang=MasterCabang::where('id',$id)->first();
+            return response()->json([$data_cabang],200);
+        }catch(\Exception $e){
+            return response()->json(['message'=>$e],500);
+        }
+
+        
     }
 
     // CRUD untuk cabang

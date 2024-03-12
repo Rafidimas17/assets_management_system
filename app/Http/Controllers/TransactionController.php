@@ -4,9 +4,12 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\MasterTransaction;
+use App\Models\MasterBarang;
 use App\Models\MasterCenterStorage;
-use App\Models\MasterOfficeStorage;
+use App\Mail\Notification;
 use App\Models\MasterCabang;
+use App\Models\MasterOfficeStorage;
+use Illuminate\Support\Facades\Mail;
 use App\Models\MasterUser;
 use Illuminate\Support\Facades\Validator;
 use Carbon\Carbon;
@@ -29,26 +32,34 @@ class TransactionController extends Controller
                 'status'=>$transaction->status_transaksi,               
             ];
         }
-        return response()->json([$data],200);
+        return response()->json([$user],200);
     }
 
     public function show(Request $request){
-        $user=$request->user();
-
+        $user = $request->user();
+    
         $transactions = MasterTransaction::all();
+    
         $data = [];
-
+    
         foreach ($transactions as $transaction) {
+            $namaBarang = $transaction->barang->nama;
+    
+            
+            $namaCabang = MasterCabang::where('id', $transaction->cabang_id)->value('nama_cabang');
+    
             $data[] = [
-                'id'=>$transaction->id,
-                'nama' => $transaction->barang->nama,
-                'cabang'=>$transaction->cabang->nama_cabang,
-                'tanggal_transaksi'=>$transaction->tanggal_transaksi,
-                'jumlah'=>$transaction->jumlah_pengajuan,
-                'status'=>$transaction->status_transaksi,               
+                'id' => $transaction->id,
+                'nama' => $namaBarang,
+                'cabang' => $namaCabang,
+                'tanggal_transaksi' => $transaction->tanggal_transaksi,
+                'jumlah' => $transaction->jumlah_pengajuan,
+                'status' => $transaction->status_transaksi,               
             ];
         }
-        return response()->json([$data],200);
+    
+        // Return respons JSON dengan data yang telah disiapkan
+        return response()->json($data, 200);
     }
     public function submit(Request $request){
         $user=$request->user();
@@ -58,6 +69,11 @@ class TransactionController extends Controller
             'jumlah'=>'required|number',
             'catatan'=>'string',
         ]);
+        $barang = MasterBarang::where('id',$request->barang_id)->first();
+        $pengguna = MasterUser::where('role_id', 2)
+        ->where('cabang_id', $user->cabang->id)
+        ->first();
+        $nama_barang=$barang->nama;
         $transaction=MasterTransaction::create([
             'nama_pemohon'=>$user->nama,
             'barang_id'=>$request->barang_id,
@@ -68,7 +84,8 @@ class TransactionController extends Controller
             'jumlah_pengajuan'=>$request->jumlah,
             'catatan'=>$request->catatan,
         ]);
-        return response()->json([$transaction],201); 
+        Mail::to($pengguna->email)->send(new Notification($user->nama, $user->cabang->nama_cabang, $request->jumlah,$request->catatan,$nama_barang));
+        return response()->json([$transaction, $nama_barang],201); 
     }else{
         return response()->json(['message'=>"Anda tidak diijinkan untuk membuat pengajuan"],401); 
     }
@@ -209,7 +226,7 @@ class TransactionController extends Controller
                     'tanggal_transaksi' => $transaction->tanggal_transaksi,
                     'nama_category' => $transaction->barang->category->nama,
                     'status' => $transaction->status_transaksi,
-                    'nama_cabang' => $cabang ? $cabang->nama_cabang : null, // Jika cabang ditemukan, ambil nama cabang. Jika tidak, set null.
+                    'nama_cabang' => $cabang->nama_cabang ? $cabang->nama_cabang : null, // Jika cabang ditemukan, ambil nama cabang. Jika tidak, set null.
                     'catatan' => $transaction->catatan,
                     'nama_pemohon' => $transaction->nama_pemohon
                 ];
